@@ -1,0 +1,121 @@
+@import "./library.css";
+@import "./flow.css";
+@import "./reader.css";
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app__main {
+  flex: 1;
+  padding: 2.5rem 1.5rem 4rem;
+}
+
+/* ── Top bar ── */
+
+.top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  height: var(--top-bar-height);
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.top-bar__inner {
+  max-width: var(--layout-max);
+  margin: 0 auto;
+  height: 100%;
+  padding: 0 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.top-bar__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex-shrink: 0;
+  text-decoration: none;
+  color: inherit;
+}
+
+.top-bar__logo {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.top-bar__title {
+  font-size: 1.125rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--color-primary-dark);
+}
+
+.top-bar__nav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.top-bar__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.875rem;
+  border-radius: var(--radius-full);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text);
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+}
+
+.top-bar__btn:hover {
+  background: var(--color-background-alt);
+}
+
+.top-bar__btn--primary {
+  background: var(--color-primary);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(45, 106, 79, 0.3);
+}
+
+.top-bar__btn--primary:hover {
+  background: var(--color-primary-light);
+}
+
+.top-bar__btn--active {
+  background: rgba(45, 106, 79, 0.1);
+  color: var(--color-primary-dark);
+}
+
+.top-bar__btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+a.top-bar__btn {
+  text-decoration: none;
+}
+
+@media (max-width: 640px) {
+  .top-bar__title {
+    font-size: 1rem;
+  }
+
+  .top-bar__btn span:not([aria-hidden]) {
+    display: none;
+  }
+
+  .top-bar__btn {
+    padding: 0.5rem 0.75rem;
+  }
+}

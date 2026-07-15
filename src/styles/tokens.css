@@ -1,0 +1,63 @@
+:root {
+  --color-primary: #2d6a4f;
+  --color-primary-light: #40916c;
+  --color-primary-dark: #1b4332;
+  --color-secondary: #f4a261;
+  --color-background: #f3f0ea;
+  --color-background-alt: #ebe6dc;
+  --color-surface: #ffffff;
+  --color-text: #2b2d42;
+  --color-text-muted: #6b7280;
+  --color-border: #e5e0d8;
+  --color-shadow: rgba(45, 106, 79, 0.12);
+
+  --font-heading: "Nunito Sans", system-ui, sans-serif;
+  --font-body: "Source Serif 4", Georgia, serif;
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-full: 999px;
+
+  --shadow-sm: 0 2px 8px var(--color-shadow);
+  --shadow-md: 0 8px 24px rgba(45, 106, 79, 0.14);
+  --shadow-book: 0 12px 32px rgba(27, 67, 50, 0.22), 0 4px 8px rgba(0, 0, 0, 0.08);
+
+  --layout-max: 1200px;
+  --reader-max: 720px;
+  --top-bar-height: 64px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font-heading);
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--color-text);
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(64, 145, 108, 0.12), transparent),
+    var(--color-background);
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+h1, h2, h3, p {
+  margin: 0;
+}
