@@ -3,7 +3,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import {
   IMPORT_STEPS,
   notifyLibraryChanged,
-  runDemoImport,
+  importBook,
+  importErrorMessage,
   getPendingFile,
   clearPendingFile,
   type BookSource,
@@ -40,6 +41,7 @@ export function VerifyBookPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [done, setDone] = useState(false);
   const [savedBook, setSavedBook] = useState<StoredBook | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!sourceState) {
@@ -55,7 +57,7 @@ export function VerifyBookPage() {
 
     let cancelled = false;
 
-    runDemoImport(bookSource, (index) => {
+    importBook(bookSource, (index) => {
       if (!cancelled) setCurrentIndex(index);
     })
       .then((book) => {
@@ -65,8 +67,8 @@ export function VerifyBookPage() {
         setSavedBook(book);
         setDone(true);
       })
-      .catch(() => {
-        if (!cancelled) navigate("/add", { replace: true });
+      .catch((err) => {
+        if (!cancelled) setError(importErrorMessage(err));
       });
 
     return () => {
@@ -78,6 +80,25 @@ export function VerifyBookPage() {
     return null;
   }
 
+  if (error) {
+    return (
+      <div className="flow-page prepare-page prepare-page--error">
+        <div className="success-card">
+          <div className="success-card__icon" aria-hidden="true">
+            ⚠️
+          </div>
+          <h1 className="success-card__title">Не удалось добавить книгу</h1>
+          <p className="success-card__book">{error}</p>
+          <div className="success-card__actions">
+            <button type="button" className="success-card__read" onClick={() => navigate("/add")}>
+              Попробовать снова
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (done && savedBook) {
     return (
       <div className="flow-page prepare-page prepare-page--success">
@@ -87,6 +108,9 @@ export function VerifyBookPage() {
           </div>
           <h1 className="success-card__title">Книга готова к чтению</h1>
           <p className="success-card__book">{savedBook.title}</p>
+          <p className="prepare-page__note">
+            Книга сохранена на устройстве и доступна офлайн.
+          </p>
 
           <div className="success-card__actions">
             <button
@@ -116,7 +140,7 @@ export function VerifyBookPage() {
     <div className="flow-page prepare-page">
       <header className="flow-page__header">
         <h1 className="flow-page__title">Проверяем книгу</h1>
-        <p className="flow-page__subtitle">Подготавливаем книгу</p>
+        <p className="flow-page__subtitle">Скачиваем и готовим к чтению офлайн</p>
       </header>
 
       <div className="prepare-card">

@@ -61,6 +61,60 @@
   text-align: center;
 }
 
+.add-book-primary {
+  margin-bottom: 1.5rem;
+}
+
+.add-book-hint {
+  margin: 0.25rem 0 0;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.add-book-hint__link {
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.add-book-hint__link:hover {
+  color: var(--color-primary-light);
+}
+
+.add-book-dev {
+  margin-top: 0.5rem;
+}
+
+.add-book-dev__toggle {
+  padding: 0.5rem 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.add-book-dev__toggle:hover {
+  color: var(--color-primary-dark);
+}
+
+.add-book-dev__panel {
+  margin-top: 0.75rem;
+  opacity: 0.92;
+}
+
+.prepare-page--error .success-card__book {
+  color: #9b2226;
+}
+
 /* ── Add book: method cards ── */
 
 .add-methods {

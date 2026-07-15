@@ -1,8 +1,8 @@
 /**
- * Convert a GitHub web URL to raw.githubusercontent.com for direct file download.
+ * Convert a GitHub web URL to raw.githubusercontent.com for direct download.
  * Supports blob links; raw URLs pass through unchanged.
  */
-export function resolveBookZipUrl(input: string): string {
+export function resolveGitHubRawUrl(input: string): string {
   const trimmed = input.trim();
   let parsed: URL;
   try {
@@ -25,6 +25,9 @@ export function resolveBookZipUrl(input: string): string {
 
   return parsed.toString();
 }
+
+/** @deprecated Use resolveGitHubRawUrl */
+export const resolveBookZipUrl = resolveGitHubRawUrl;
 
 export function isZipUrl(url: string): boolean {
   const path = url.split("?")[0].toLowerCase();

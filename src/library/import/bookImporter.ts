@@ -3,17 +3,22 @@ import type { BookSource } from "./bookSource";
 import { toStoredSourceRef } from "./bookSource";
 import { blobFromSource } from "./blobFromSource";
 import { libraryStore } from "../storage/localLibraryStore";
-import { extractBookZip } from "../../reader/content/extractBookZip";
 import { metadataFromStoredBook } from "../../reader/api/openBook";
 import { bookContentStore } from "../../reader/content/bookContentStore";
-import { IMPORT_STEPS, STEP_DELAY_MS, delay } from "./steps";
+import { IMPORT_STEPS } from "./steps";
+import { processBookArchive } from "./processBookArchive";
+import type { ValidationPhase } from "./validateBookContent";
+import { ImportError } from "./importErrors";
 
 function sourceInflightKey(source: BookSource): string {
-  if (source.type === "link") return source.url;
+  if (source.type === "link") return source.url.trim();
   return `file:${source.file.name}:${source.file.size}:${source.file.lastModified}`;
 }
 
-function defaultMetaFields(): Omit<StoredBook, "localId" | "importedAt" | "sourceUrl" | "id" | "title" | "defaultLocale" | "locales" | "theme"> {
+function defaultMetaFields(): Omit<
+  StoredBook,
+  "localId" | "importedAt" | "sourceUrl" | "id" | "title" | "defaultLocale" | "locales" | "theme"
+> {
   return {
     subtitle: undefined,
     series: undefined,
@@ -38,10 +43,17 @@ async function moveContent(fromId: string, toId: string): Promise<void> {
 
 export type ImportProgressCallback = (stepIndex: number) => void;
 
+const PHASE_TO_STEP: Record<ValidationPhase, number> = {
+  structure: 1,
+  languages: 2,
+  illustrations: 3,
+};
+
 /**
- * Import pipeline: File | URL → Blob → extractBookZip → IndexedDB → Library
+ * Cloud library import: link or file → fetch/read Blob → processBookArchive → IndexedDB → Library.
+ * ZIP is never stored; only extracted book files and sourceUrl remain on device.
  */
-export async function runDemoImport(
+export async function importBook(
   source: BookSource,
   onStep: ImportProgressCallback
 ): Promise<StoredBook> {
@@ -50,21 +62,19 @@ export async function runDemoImport(
   if (inflight) return inflight;
 
   const promise = (async () => {
-    const sourceRef = toStoredSourceRef(source);
+    onStep(0);
+    const blob = await blobFromSource(source);
+
     const contentLocalId = crypto.randomUUID();
 
-    const blob = await blobFromSource(source);
-    if (blob.size === 0) throw new Error("EMPTY_FILE");
-    await extractBookZip(contentLocalId, blob);
+    await processBookArchive(contentLocalId, blob, (phase) => {
+      onStep(PHASE_TO_STEP[phase]);
+    });
 
-    for (let i = 0; i < IMPORT_STEPS.length; i++) {
-      onStep(i);
-      await delay(STEP_DELAY_MS);
-    }
-
+    onStep(4);
     const fromBook = await metadataFromStoredBook(contentLocalId);
     if (!fromBook.id || !fromBook.title) {
-      throw new Error("INVALID_BOOK");
+      throw new ImportError("INVALID_BOOK");
     }
 
     const meta: Omit<StoredBook, "localId" | "importedAt" | "sourceUrl"> = {
@@ -89,11 +99,13 @@ export async function runDemoImport(
       await moveContent(contentLocalId, targetLocalId);
     }
 
+    onStep(5);
+
     const book: StoredBook = {
       ...meta,
       localId: targetLocalId,
       importedAt: new Date().toISOString(),
-      sourceUrl: sourceRef,
+      sourceUrl: toStoredSourceRef(source),
     };
 
     libraryStore.save(book);
@@ -106,6 +118,14 @@ export async function runDemoImport(
   } finally {
     importInflight.delete(inflightKey);
   }
+}
+
+/** Import a book published on GitHub (edumost-books releases). */
+export function importBookFromUrl(
+  url: string,
+  onStep: ImportProgressCallback
+): Promise<StoredBook> {
+  return importBook({ type: "link", url }, onStep);
 }
 
 const importInflight = new Map<string, Promise<StoredBook>>();

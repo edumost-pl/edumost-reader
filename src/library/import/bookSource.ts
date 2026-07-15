@@ -38,9 +38,9 @@ export function toSourceState(source: BookSource): BookSourceState {
   };
 }
 
-/** Internal storage reference — never shown in UI. */
+/** Internal storage reference — original URL for cloud books; never shown in UI. */
 export function toStoredSourceRef(source: BookSource): string {
-  if (source.type === "link") return source.url;
+  if (source.type === "link") return source.url.trim();
   return `edumost-file:${source.file.name}`;
 }
 

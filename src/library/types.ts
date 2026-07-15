@@ -10,7 +10,7 @@ export type LocalBookId = string;
 export interface StoredBook extends LibraryBook {
   localId: LocalBookId;
   importedAt: string;
-  /** Original link (internal only — never shown in UI). */
+  /** Cloud source URL (GitHub link) or dev file ref — never shown in UI. */
   sourceUrl: string;
 }
 
