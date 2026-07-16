@@ -92,9 +92,10 @@ export function BookReaderPage() {
   if (loading) {
     return (
       <div className="reader-page reader-page--loading">
-        <div className="reader-loading" aria-busy="true">
+          <div className="reader-loading" aria-busy="true">
           <div className="verify-card__ring" />
           <p>Открываем книгу…</p>
+          <p className="reader-loading__hint">При необходимости скачиваем с GitHub</p>
         </div>
       </div>
     );

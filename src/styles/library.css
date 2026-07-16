@@ -22,6 +22,43 @@
   color: var(--color-text-muted);
 }
 
+.library-page__cloud-hint {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.library-page__message {
+  margin: 0 0 1.25rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-primary-dark);
+  background: rgba(45, 106, 79, 0.08);
+  border-radius: var(--radius-md);
+}
+
+.library-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: -1rem 0 1.75rem;
+}
+
+.library-toolbar__btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  background: rgba(45, 106, 79, 0.08);
+  border: 1px solid rgba(45, 106, 79, 0.2);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+}
+
+.library-toolbar__btn:hover {
+  background: rgba(45, 106, 79, 0.14);
+}
+
 /* ── Book grid ── */
 
 .book-grid {
@@ -89,6 +126,19 @@
     rgba(0, 0, 0, 0.08) 100%
   );
   pointer-events: none;
+}
+
+.book-card__cloud-badge {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 2;
+  font-size: 0.875rem;
+  line-height: 1;
+  padding: 0.35rem;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 999px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
 }
 
 .book-card__spine {

@@ -1,5 +1,7 @@
 import { libraryStore } from "../../library/storage/localLibraryStore";
 import type { StoredBook } from "../../library/types";
+import { ensureBookContent } from "../../library/import/ensureBookContent";
+import { importErrorMessage } from "../../library/import/importErrors";
 import { bookContentStore } from "../content/bookContentStore";
 import {
   buildBookToc,
@@ -11,7 +13,12 @@ import { contentDirForVolume } from "../book/parseBookToml";
 import { firstPagePath } from "../book/discoverPages";
 import type { BookManifest, BookReadingSession, ReadingPage, VolumeConfig } from "../types";
 
-export type OpenBookErrorCode = "NOT_FOUND" | "NO_CONTENT" | "INVALID_BOOK" | "NO_PAGES";
+export type OpenBookErrorCode =
+  | "NOT_FOUND"
+  | "NO_CONTENT"
+  | "INVALID_BOOK"
+  | "NO_PAGES"
+  | "RESTORE_FAILED";
 
 export class OpenBookError extends Error {
   constructor(
@@ -26,6 +33,8 @@ export class OpenBookError extends Error {
 export interface OpenBookResult {
   session: BookReadingSession;
   page: ReadingPage;
+  /** Content was re-downloaded from sourceUrl. */
+  restored?: boolean;
 }
 
 async function loadLibraryCard(localId: string): Promise<Partial<StoredBook>> {
@@ -38,19 +47,18 @@ async function loadLibraryCard(localId: string): Promise<Partial<StoredBook>> {
   }
 }
 
-async function assertBookAccess(localId: string): Promise<StoredBook> {
+async function assertBookAccess(localId: string): Promise<{ stored: StoredBook; restored: boolean }> {
   const stored = libraryStore.get(localId);
   if (!stored) {
     throw new OpenBookError("NOT_FOUND", "Книга не найдена в библиотеке");
   }
-  const hasContent = await bookContentStore.has(localId);
-  if (!hasContent) {
-    throw new OpenBookError(
-      "NO_CONTENT",
-      "Содержимое книги недоступно. Добавьте книгу из файла (.zip)."
-    );
+
+  try {
+    const status = await ensureBookContent(stored);
+    return { stored, restored: status === "restored" };
+  } catch (err) {
+    throw new OpenBookError("RESTORE_FAILED", importErrorMessage(err));
   }
-  return stored;
 }
 
 function firstPageInBook(manifest: BookManifest, localId: string, locale: string): Promise<string | null> {
@@ -64,9 +72,9 @@ function firstPageInBook(manifest: BookManifest, localId: string, locale: string
   });
 }
 
-/** Open book session + optional page (defaults to first page). */
+/** Open book session + optional page (defaults to first page). Restores from sourceUrl if needed. */
 export async function openBook(localId: string, pagePath?: string): Promise<OpenBookResult> {
-  const stored = await assertBookAccess(localId);
+  const { stored, restored } = await assertBookAccess(localId);
   const manifest = await loadManifest(localId);
   const locale = manifest.defaultLocale;
 
@@ -83,7 +91,7 @@ export async function openBook(localId: string, pagePath?: string): Promise<Open
   }
 
   const page = await loadReadingPage(localId, session, targetPath);
-  return { session, page };
+  return { session, page, restored };
 }
 
 /** @deprecated use openBook */

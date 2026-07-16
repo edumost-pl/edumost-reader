@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { StoredBook } from "../../library";
-import { removeBookFromLibrary } from "../../library/removeBook";
+import { isCloudSourceUrl, removeBookFromLibrary } from "../../library";
 import { coverGradient, formatLocales } from "../../lib/format";
 import { ConfirmDialog } from "./ConfirmDialog";
 
@@ -14,6 +14,7 @@ export function BookCard({ book }: BookCardProps) {
   const [colorA, colorB] = coverGradient(book.id);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [removing, setRemoving] = useState(false);
+  const fromCloud = isCloudSourceUrl(book.sourceUrl);
 
   async function handleDeleteConfirm() {
     setRemoving(true);
@@ -42,6 +43,11 @@ export function BookCard({ book }: BookCardProps) {
               {book.edition && <span className="book-card__edition">{book.edition}</span>}
             </div>
             <div className="book-card__spine" aria-hidden="true" />
+            {fromCloud && (
+              <span className="book-card__cloud-badge" title="Книга из облака GitHub">
+                ☁️
+              </span>
+            )}
           </div>
         </div>
 
@@ -80,6 +86,12 @@ export function BookCard({ book }: BookCardProps) {
               <div className="book-card__detail">
                 <dt>Серия</dt>
                 <dd>{book.series}</dd>
+              </div>
+            )}
+            {fromCloud && (
+              <div className="book-card__detail">
+                <dt>Источник</dt>
+                <dd>GitHub · офлайн после открытия</dd>
               </div>
             )}
           </dl>

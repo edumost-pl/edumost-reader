@@ -8,7 +8,8 @@ export type ImportErrorCode =
   | "EMPTY_BOOK"
   | "NO_PAGES"
   | "INVALID_BOOK"
-  | "INVALID_LOCALES";
+  | "INVALID_LOCALES"
+  | "NO_CLOUD_SOURCE";
 
 const MESSAGES: Record<ImportErrorCode, string> = {
   INVALID_URL: "Ссылка недействительна. Проверьте адрес и попробуйте снова.",
@@ -21,6 +22,8 @@ const MESSAGES: Record<ImportErrorCode, string> = {
   NO_PAGES: "В книге нет лабораторий для чтения.",
   INVALID_BOOK: "Не удалось прочитать данные книги.",
   INVALID_LOCALES: "В книге не указаны языки.",
+  NO_CLOUD_SOURCE:
+    "Содержимое книги недоступно на этом устройстве. Добавьте книгу по ссылке с GitHub.",
 };
 
 export class ImportError extends Error {

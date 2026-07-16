@@ -44,6 +44,14 @@ export function toStoredSourceRef(source: BookSource): string {
   return `edumost-file:${source.file.name}`;
 }
 
+/** True when sourceUrl can be re-downloaded (GitHub / HTTP zip). */
+export function isCloudSourceUrl(sourceUrl: string | undefined | null): boolean {
+  if (!sourceUrl) return false;
+  const trimmed = sourceUrl.trim();
+  if (trimmed.startsWith("edumost-file:")) return false;
+  return /^https?:\/\//i.test(trimmed);
+}
+
 export function bookSourceFromState(state: BookSourceState, file: File | null): BookSource | null {
   if (state.type === "link") {
     return { type: "link", url: state.url };

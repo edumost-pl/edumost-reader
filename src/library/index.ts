@@ -24,7 +24,15 @@ export {
   toSourceState,
   bookSourceFromState,
   sourceStateKey,
+  isCloudSourceUrl,
 } from "./import/bookSource";
+export { ensureBookContent } from "./import/ensureBookContent";
+export {
+  exportLibraryBookmarks,
+  importLibraryBookmarks,
+  downloadBookmarksJson,
+} from "./bookmarks";
+export type { LibraryBookmark, LibraryExportFile } from "./bookmarks";
 export { stagePendingFile, getPendingFile, clearPendingFile } from "./import/pendingFile";
 export { resolveGitHubRawUrl, resolveBookZipUrl, isZipUrl } from "./import/resolveBookZipUrl";
 export { downloadBookZip } from "./import/downloadBookZip";

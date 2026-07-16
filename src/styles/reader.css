@@ -25,6 +25,13 @@
   font-weight: 600;
 }
 
+.reader-loading__hint {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  opacity: 0.85;
+}
+
 .reader-header {
   max-width: var(--reader-max);
   margin: 0 auto;
