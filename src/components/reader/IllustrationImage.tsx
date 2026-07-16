@@ -1,11 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { bookContentStore } from "../../reader/content/bookContentStore";
-import {
-  getCachedIllustrationUrl,
-  illustrationVersion,
-  mimeForIllustrationPath,
-  putIllustrationCache,
-} from "../../reader/illustration/imageCache";
+import { mimeForIllustrationPath } from "../../reader/illustration/imageCache";
 import { resolveIllustrationAsset } from "../../reader/illustration/resolveAsset";
 import type { IllustrationParams } from "../../reader/illustration/types";
 
@@ -14,15 +9,12 @@ interface IllustrationImageProps {
   bookId: string;
   locale?: string;
   params: IllustrationParams;
-  /** Index in book registry for gallery */
   galleryIndex: number;
   onOpenGallery: (index: number) => void;
 }
 
 export function IllustrationImage({
   localId,
-  bookId,
-  locale = "ru",
   params,
   galleryIndex,
   onOpenGallery,
@@ -34,10 +26,11 @@ export function IllustrationImage({
   const rootRef = useRef<HTMLElement>(null);
   const blobRef = useRef<string | null>(null);
 
-  // Lazy: observe proximity to viewport
+  // Lazy load when near viewport; also kick immediately if already visible
   useEffect(() => {
     const el = rootRef.current;
     if (!el) return;
+
     const io = new IntersectionObserver(
       (entries) => {
         if (entries.some((e) => e.isIntersecting)) {
@@ -45,10 +38,17 @@ export function IllustrationImage({
           io.disconnect();
         }
       },
-      { rootMargin: "200px 0px", threshold: 0.01 }
+      { rootMargin: "240px 0px", threshold: 0 }
     );
     io.observe(el);
-    return () => io.disconnect();
+
+    // Fallback: if observer never fires (layout quirks), load after a tick
+    const t = window.setTimeout(() => setVisible(true), 50);
+
+    return () => {
+      io.disconnect();
+      window.clearTimeout(t);
+    };
   }, []);
 
   useEffect(() => {
@@ -56,48 +56,59 @@ export function IllustrationImage({
     let cancelled = false;
 
     (async () => {
-      const asset = await resolveIllustrationAsset(localId, params.id, locale);
+      const asset = await resolveIllustrationAsset(localId, params.id);
       if (cancelled) return;
-      setAlt(asset.alt || params.caption || params.id);
+
+      setAlt(params.caption || asset.alt || params.id);
 
       if (asset.missing || !asset.path) {
         setMissing(true);
+        setSrc(null);
         return;
       }
 
       const bytes = await bookContentStore.getBytes(localId, asset.path);
-      if (cancelled || !bytes) {
+      if (cancelled) return;
+
+      if (!bytes || bytes.byteLength === 0) {
+        console.log("Not found (empty bytes):", asset.path);
         setMissing(true);
         return;
       }
 
-      const version = illustrationVersion(bytes);
       const mime = mimeForIllustrationPath(asset.path);
-
-      let url = await getCachedIllustrationUrl(bookId, asset.path, version);
-      if (!url) {
-        url = await putIllustrationCache(bookId, asset.path, version, bytes, mime);
-      }
+      const blob = new Blob([new Uint8Array(bytes)], { type: mime });
+      const url = URL.createObjectURL(blob);
 
       if (cancelled) {
         URL.revokeObjectURL(url);
         return;
       }
+
+      if (blobRef.current) URL.revokeObjectURL(blobRef.current);
       blobRef.current = url;
       setSrc(url);
       setMissing(false);
-    })().catch(() => {
+      console.log("Inserted <img> from:", asset.path);
+    })().catch((err) => {
+      console.log("Illustration load error:", params.id, err);
       if (!cancelled) setMissing(true);
     });
 
     return () => {
       cancelled = true;
+    };
+  }, [visible, localId, params.id, params.caption]);
+
+  // Revoke blob only on unmount (not on StrictMode re-run mid-load)
+  useEffect(() => {
+    return () => {
       if (blobRef.current) {
         URL.revokeObjectURL(blobRef.current);
         blobRef.current = null;
       }
     };
-  }, [visible, localId, bookId, params.id, params.caption, locale]);
+  }, []);
 
   const width = params.width ?? "100%";
 
@@ -123,7 +134,7 @@ export function IllustrationImage({
           onClick={() => onOpenGallery(galleryIndex)}
           aria-label={alt || `Открыть иллюстрацию ${params.id}`}
         >
-          <img className="edumost-ill__img" src={src} alt={alt} loading="lazy" decoding="async" />
+          <img className="edumost-ill__img" src={src} alt={alt} decoding="async" />
         </button>
       ) : (
         <div className="edumost-ill__skeleton" aria-busy="true" aria-label="Загрузка иллюстрации" />

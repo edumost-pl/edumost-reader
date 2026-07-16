@@ -1,67 +1,61 @@
 import { bookContentStore } from "../content/bookContentStore";
 import type { IllustrationAsset } from "./types";
 
-const MANIFEST_PATHS = [
-  "assets/illustrations/manifest.json",
-  "assets/shared/illustrations/manifest.json",
-];
+/** Order: PNG first, then fallbacks. No manifest. */
+const EXT_PRIORITY = ["png", "webp", "jpg", "jpeg", "svg"] as const;
 
-const EXT_PRIORITY = ["webp", "png", "jpg", "jpeg", "svg"] as const;
-
-type ManifestEntry = { file?: string; alt?: string | Record<string, string> };
-type Manifest = Record<string, ManifestEntry>;
-
-async function loadManifest(localId: string): Promise<Manifest | null> {
-  for (const path of MANIFEST_PATHS) {
-    const raw = await bookContentStore.getText(localId, path);
-    if (!raw) continue;
-    try {
-      return JSON.parse(raw) as Manifest;
-    } catch {
-      /* ignore */
-    }
-  }
+async function tryPath(localId: string, path: string): Promise<ArrayBuffer | null> {
+  const bytes = await bookContentStore.getBytes(localId, path);
+  if (bytes && bytes.byteLength > 0) return bytes;
   return null;
 }
 
-function altFromEntry(entry: ManifestEntry | undefined, locale: string): string {
-  if (!entry?.alt) return "";
-  if (typeof entry.alt === "string") return entry.alt;
-  return entry.alt[locale] ?? entry.alt.ru ?? entry.alt.en ?? Object.values(entry.alt)[0] ?? "";
-}
-
-/** Resolve illustration file path inside the book (IndexedDB). */
+/**
+ * Resolve illustration by ID only:
+ * assets/illustrations/{ID}.png → .webp → .jpg → .svg
+ * relative to book root in IndexedDB.
+ */
 export async function resolveIllustrationAsset(
   localId: string,
   id: string,
-  locale = "ru"
+  _locale = "ru"
 ): Promise<IllustrationAsset> {
-  const manifest = await loadManifest(localId);
-  const entry = manifest?.[id];
-  const alt = altFromEntry(entry, locale) || id;
+  const cleanId = id.trim();
+  console.log("Illustration ID:", cleanId);
 
-  const candidates: string[] = [];
-  if (entry?.file) {
-    candidates.push(
-      entry.file.startsWith("assets/")
-        ? entry.file
-        : `assets/illustrations/${entry.file}`
-    );
-  }
-  for (const ext of EXT_PRIORITY) {
-    candidates.push(`assets/illustrations/${id}.${ext}`);
-  }
+  const candidates = EXT_PRIORITY.map((ext) => `assets/illustrations/${cleanId}.${ext}`);
 
-  const seen = new Set<string>();
   for (const path of candidates) {
-    const norm = path.replace(/\\/g, "/");
-    if (seen.has(norm)) continue;
-    seen.add(norm);
-    const bytes = await bookContentStore.getBytes(localId, norm);
-    if (bytes && bytes.byteLength > 0) {
-      return { id, path: norm, alt, missing: false };
+    console.log("Trying:", path);
+    const bytes = await tryPath(localId, path);
+    if (bytes) {
+      console.log("Loaded:", path, `(${bytes.byteLength} bytes)`);
+      return { id: cleanId, path, alt: cleanId, missing: false };
     }
   }
 
-  return { id, path: null, alt, missing: true };
+  // Fallback: scan folder for matching filename (handles odd zip prefixes)
+  const available = await bookContentStore.listPaths(localId, "assets/illustrations/");
+  const illFiles = available.filter((p) => !p.endsWith("/") && !p.endsWith("manifest.json"));
+
+  for (const ext of EXT_PRIORITY) {
+    const needle = `${cleanId}.${ext}`.toLowerCase();
+    const hit = illFiles.find((p) => p.replace(/\\/g, "/").toLowerCase().endsWith(needle));
+    if (hit) {
+      console.log("Trying (scan):", hit);
+      const bytes = await tryPath(localId, hit);
+      if (bytes) {
+        console.log("Loaded:", hit, `(${bytes.byteLength} bytes)`);
+        return { id: cleanId, path: hit, alt: cleanId, missing: false };
+      }
+    }
+  }
+
+  console.log("Not found:", cleanId);
+  console.log(
+    "Available under assets/illustrations/:",
+    illFiles.filter((p) => /ILL-/i.test(p))
+  );
+
+  return { id: cleanId, path: null, alt: cleanId, missing: true };
 }

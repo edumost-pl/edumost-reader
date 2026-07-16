@@ -1,11 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { bookContentStore } from "../../reader/content/bookContentStore";
-import {
-  getCachedIllustrationUrl,
-  illustrationVersion,
-  mimeForIllustrationPath,
-  putIllustrationCache,
-} from "../../reader/illustration/imageCache";
+import { mimeForIllustrationPath } from "../../reader/illustration/imageCache";
 import { resolveIllustrationAsset } from "../../reader/illustration/resolveAsset";
 import type { IllustrationRef } from "../../reader/illustration/types";
 
@@ -23,8 +18,6 @@ interface IllustrationGalleryProps {
 export function IllustrationGallery({
   open,
   localId,
-  bookId,
-  locale = "ru",
   items,
   index,
   onClose,
@@ -60,22 +53,21 @@ export function IllustrationGallery({
 
     (async () => {
       setSrc(null);
-      const asset = await resolveIllustrationAsset(localId, item.id, locale);
+      setMissing(false);
+      const asset = await resolveIllustrationAsset(localId, item.id);
       if (cancelled) return;
-      setAlt(asset.alt || item.caption || item.id);
+      setAlt(item.caption || asset.alt || item.id);
       if (asset.missing || !asset.path) {
         setMissing(true);
         return;
       }
       const bytes = await bookContentStore.getBytes(localId, asset.path);
-      if (cancelled || !bytes) {
+      if (cancelled || !bytes || bytes.byteLength === 0) {
         setMissing(true);
         return;
       }
-      const version = illustrationVersion(bytes);
       const mime = mimeForIllustrationPath(asset.path);
-      let url = await getCachedIllustrationUrl(bookId, asset.path, version);
-      if (!url) url = await putIllustrationCache(bookId, asset.path, version, bytes, mime);
+      const url = URL.createObjectURL(new Blob([new Uint8Array(bytes)], { type: mime }));
       if (cancelled) {
         URL.revokeObjectURL(url);
         return;
@@ -83,7 +75,8 @@ export function IllustrationGallery({
       blobUrl = url;
       setSrc(url);
       setMissing(false);
-    })().catch(() => {
+    })().catch((err) => {
+      console.log("Gallery illustration error:", item.id, err);
       if (!cancelled) setMissing(true);
     });
 
@@ -91,7 +84,7 @@ export function IllustrationGallery({
       cancelled = true;
       if (blobUrl) URL.revokeObjectURL(blobUrl);
     };
-  }, [open, item, localId, bookId, locale]);
+  }, [open, item, localId]);
 
   const zoomIn = useCallback(() => setZoom((z) => Math.min(3, z + 0.25)), []);
   const zoomOut = useCallback(() => setZoom((z) => Math.max(0.5, z - 0.25)), []);
