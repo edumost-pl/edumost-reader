@@ -11,6 +11,7 @@ import {
 } from "../book/buildToc";
 import { contentDirForVolume } from "../book/parseBookToml";
 import { firstPagePath } from "../book/discoverPages";
+import { buildIllustrationRegistry } from "../illustration/buildRegistry";
 import type { BookManifest, BookReadingSession, ReadingPage, VolumeConfig } from "../types";
 
 export type OpenBookErrorCode =
@@ -83,7 +84,15 @@ export async function openBook(localId: string, pagePath?: string): Promise<Open
   }
 
   const toc = await buildBookToc(localId, manifest, locale);
-  const session: BookReadingSession = { stored, manifest, locale, toc };
+  const registry = await buildIllustrationRegistry(localId);
+  const session: BookReadingSession = {
+    stored,
+    manifest,
+    locale,
+    toc,
+    illustrations: registry.items,
+    missingIllustrations: registry.missingIds,
+  };
 
   const targetPath = pagePath ?? (await firstPageInBook(manifest, localId, locale));
   if (!targetPath) {

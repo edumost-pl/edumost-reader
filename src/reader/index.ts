@@ -11,6 +11,15 @@ export {
 export { bookContentStore } from "./content/bookContentStore";
 export { extractBookZip } from "./content/extractBookZip";
 export { renderMarkdown, revokeBlobUrls, stripInteractiveMarkdown } from "./markdown/renderMarkdown";
+export { buildIllustrationRegistry } from "./illustration/buildRegistry";
+export { findIllustrationBlocks, splitMarkdownWithIllustrations } from "./illustration/parseBlocks";
+export { resolveIllustrationAsset } from "./illustration/resolveAsset";
+export type {
+  IllustrationParams,
+  IllustrationRef,
+  IllustrationRegistry,
+  IllustrationAsset,
+} from "./illustration/types";
 export {
   openBook,
   openBookFirstPage,

@@ -9,6 +9,7 @@ import {
 } from "../../reader";
 import { MarkdownView } from "./MarkdownView";
 import { TableOfContents } from "./TableOfContents";
+import { IllustrationGallery } from "./IllustrationGallery";
 
 export function BookReaderPage() {
   const { localId } = useParams<{ localId: string }>();
@@ -21,6 +22,8 @@ export function BookReaderPage() {
   const [pageLoading, setPageLoading] = useState(false);
   const [tocOpen, setTocOpen] = useState(false);
   const [expandedVolumes, setExpandedVolumes] = useState<Record<string, boolean>>({});
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [galleryIndex, setGalleryIndex] = useState(0);
 
   useEffect(() => {
     if (!localId) {
@@ -37,9 +40,7 @@ export function BookReaderPage() {
         if (cancelled) return;
         setSession(s);
         setCurrentPage(page);
-        setExpandedVolumes(
-          Object.fromEntries(s.toc.map((v) => [v.id, v.pages.length > 0]))
-        );
+        setExpandedVolumes(Object.fromEntries(s.toc.map((v) => [v.id, v.pages.length > 0])));
         setLoading(false);
       })
       .catch((e) => {
@@ -75,6 +76,11 @@ export function BookReaderPage() {
     setExpandedVolumes((prev) => ({ ...prev, [volumeId]: !prev[volumeId] }));
   }, []);
 
+  const openGallery = useCallback((index: number) => {
+    setGalleryIndex(index);
+    setGalleryOpen(true);
+  }, []);
+
   useEffect(() => {
     if (!currentPage || !session) return;
     const volId = currentPage.volume.id;
@@ -92,7 +98,7 @@ export function BookReaderPage() {
   if (loading) {
     return (
       <div className="reader-page reader-page--loading">
-          <div className="reader-loading" aria-busy="true">
+        <div className="reader-loading" aria-busy="true">
           <div className="verify-card__ring" />
           <p>Открываем книгу…</p>
           <p className="reader-loading__hint">При необходимости скачиваем с GitHub</p>
@@ -147,6 +153,16 @@ export function BookReaderPage() {
           <Link to="/" className="reader-toolbar__library">
             Моя библиотека
           </Link>
+          {session.illustrations.length > 0 && (
+            <button
+              type="button"
+              className="reader-toolbar__gallery"
+              onClick={() => openGallery(0)}
+              aria-label="Галерея иллюстраций"
+            >
+              🖼 {session.illustrations.length}
+            </button>
+          )}
         </header>
 
         <div className="reader-page">
@@ -159,15 +175,33 @@ export function BookReaderPage() {
             </div>
           </header>
 
-          <article className={`reader-article${pageLoading ? " reader-article--loading" : ""}`} aria-busy={pageLoading}>
+          <article
+            className={`reader-article${pageLoading ? " reader-article--loading" : ""}`}
+            aria-busy={pageLoading}
+          >
             <MarkdownView
               localId={session.stored.localId}
+              bookId={session.stored.id}
               pagePath={currentPage.page.path}
               markdown={currentPage.markdown}
+              locale={session.locale}
+              registryItems={session.illustrations}
+              onOpenGallery={openGallery}
             />
           </article>
         </div>
       </div>
+
+      <IllustrationGallery
+        open={galleryOpen}
+        localId={session.stored.localId}
+        bookId={session.stored.id}
+        locale={session.locale}
+        items={session.illustrations}
+        index={galleryIndex}
+        onClose={() => setGalleryOpen(false)}
+        onIndexChange={setGalleryIndex}
+      />
     </div>
   );
 }

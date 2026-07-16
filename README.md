@@ -22,6 +22,21 @@
 https://github.com/edumost-pl/edumost-books/blob/main/releases/engineering-roadmap-tom-01.zip
 ```
 
+## Иллюстрации
+
+В Markdown:
+
+```markdown
+:::illustration
+ILL-T1-L0-01
+:::
+```
+
+Reader ищет `assets/illustrations/ILL-T1-L0-01.webp|png|svg`.  
+Если файла нет — placeholder. Промпты художника (`prompts/`) в Reader **не показываются**.
+
+При открытии книги строится **реестр иллюстраций** (галерея, навигация, список missing).
+
 ## Что хранится
 
 | Данные | Где |

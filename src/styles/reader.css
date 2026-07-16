@@ -327,6 +327,228 @@
   text-decoration: none;
 }
 
+.reader-toolbar__gallery {
+  margin-left: auto;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  background: rgba(45, 106, 79, 0.1);
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.reader-toolbar__gallery:hover {
+  background: rgba(45, 106, 79, 0.18);
+}
+
+/* ── Illustration engine ── */
+
+.edumost-ill {
+  margin: 1.5rem 0;
+  max-width: 100%;
+}
+
+.edumost-ill__button {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: zoom-in;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.edumost-ill__img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+
+.edumost-ill__caption {
+  margin: 0.5rem 0 0;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.edumost-ill__placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 12rem;
+  padding: 2rem 1.25rem;
+  background: linear-gradient(145deg, #f0f4f1, #e8eef0);
+  border: 2px dashed rgba(45, 106, 79, 0.25);
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.edumost-ill__placeholder-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.edumost-ill__placeholder-text {
+  font-weight: 700;
+  font-size: 0.9375rem;
+  color: var(--color-primary-dark);
+}
+
+.edumost-ill__placeholder-id {
+  font-size: 0.75rem;
+  font-family: ui-monospace, monospace;
+  opacity: 0.7;
+}
+
+.edumost-ill__placeholder--gallery {
+  min-height: 16rem;
+  min-width: min(80vw, 32rem);
+}
+
+.edumost-ill__skeleton {
+  min-height: 12rem;
+  border-radius: var(--radius-md);
+  background: linear-gradient(90deg, #eef2ef 25%, #f7f9f8 50%, #eef2ef 75%);
+  background-size: 200% 100%;
+  animation: ill-shimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes ill-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+/* ── Illustration gallery ── */
+
+.ill-gallery {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ill-gallery__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 20, 0.82);
+}
+
+.ill-gallery__panel {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  width: min(96vw, 1100px);
+  max-height: 94vh;
+  padding: 0.75rem;
+}
+
+.ill-gallery__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+  color: #fff;
+}
+
+.ill-gallery__counter {
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.ill-gallery__actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.ill-gallery__actions button {
+  width: 2.25rem;
+  height: 2.25rem;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 1.125rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ill-gallery__actions button:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.ill-gallery__stage {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 0;
+  flex: 1;
+}
+
+.ill-gallery__frame {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+  max-height: calc(94vh - 6rem);
+  border-radius: var(--radius-md);
+}
+
+.ill-gallery__img {
+  max-width: 100%;
+  max-height: calc(94vh - 7rem);
+  object-fit: contain;
+  transition: transform 0.15s ease;
+  transform-origin: center center;
+  border-radius: 4px;
+}
+
+.ill-gallery__nav {
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.ill-gallery__nav:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.ill-gallery__nav:not(:disabled):hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.ill-gallery__caption {
+  margin: 0.75rem 0 0;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.875rem;
+}
+
+
 .reader-header--compact {
   padding-top: 1.25rem;
 }

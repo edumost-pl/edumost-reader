@@ -54,4 +54,8 @@ export interface BookReadingSession {
   manifest: BookManifest;
   locale: string;
   toc: TocVolume[];
+  /** Ordered list of :::illustration blocks across the book */
+  illustrations: import("./illustration/types").IllustrationRef[];
+  /** IDs referenced in markdown but missing under assets/illustrations/ */
+  missingIllustrations: string[];
 }
