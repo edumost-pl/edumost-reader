@@ -14,6 +14,9 @@ export function formatLocales(locales: string[], defaultLocale: string): string 
   return ordered.map(formatLocale).join(" · ");
 }
 
+/** Standard green cover when no assets/cover.webp|png. */
+export const DEFAULT_COVER_GRADIENT: [string, string] = ["#2d6a4f", "#40916c"];
+
 /** Deterministic accent from book id for cover gradients. */
 export function coverGradient(id: string): [string, string] {
   const palettes: Array<[string, string]> = [

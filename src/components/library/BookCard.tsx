@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { StoredBook } from "../../library";
 import { isCloudSourceUrl, removeBookFromLibrary } from "../../library";
-import { coverGradient, formatLocales } from "../../lib/format";
+import { DEFAULT_COVER_GRADIENT, formatLocales } from "../../lib/format";
+import { resolveCoverAsset } from "../../reader/cover/resolveCover";
 import { ConfirmDialog } from "./ConfirmDialog";
 
 interface BookCardProps {
@@ -11,10 +12,35 @@ interface BookCardProps {
 
 export function BookCard({ book }: BookCardProps) {
   const navigate = useNavigate();
-  const [colorA, colorB] = coverGradient(book.id);
+  const [colorA, colorB] = DEFAULT_COVER_GRADIENT;
+  const [coverSrc, setCoverSrc] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [removing, setRemoving] = useState(false);
+  const blobRef = useRef<string | null>(null);
   const fromCloud = isCloudSourceUrl(book.sourceUrl);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      const asset = await resolveCoverAsset(book.localId);
+      if (cancelled) return;
+      if (asset.blobUrl) {
+        blobRef.current = asset.blobUrl;
+        setCoverSrc(asset.blobUrl);
+      }
+    })().catch(() => {
+      /* keep default green cover */
+    });
+
+    return () => {
+      cancelled = true;
+      if (blobRef.current) {
+        URL.revokeObjectURL(blobRef.current);
+        blobRef.current = null;
+      }
+    };
+  }, [book.localId]);
 
   async function handleDeleteConfirm() {
     setRemoving(true);
@@ -31,17 +57,26 @@ export function BookCard({ book }: BookCardProps) {
       <article className="book-card" data-theme={book.theme}>
         <div className="book-card__book">
           <div
-            className="book-card__cover"
-            style={{
-              background: `linear-gradient(145deg, ${colorA} 0%, ${colorB} 55%, ${colorA}dd 100%)`,
-            }}
+            className={`book-card__cover${coverSrc ? " book-card__cover--image" : ""}`}
+            style={
+              coverSrc
+                ? undefined
+                : {
+                    background: `linear-gradient(145deg, ${colorA} 0%, ${colorB} 55%, ${colorA}dd 100%)`,
+                  }
+            }
           >
+            {coverSrc && (
+              <img className="book-card__cover-img" src={coverSrc} alt="" decoding="async" />
+            )}
             <div className="book-card__cover-shine" aria-hidden="true" />
-            <div className="book-card__cover-content">
-              {book.series && <span className="book-card__series">{book.series}</span>}
-              <h2 className="book-card__cover-title">{book.title}</h2>
-              {book.edition && <span className="book-card__edition">{book.edition}</span>}
-            </div>
+            {!coverSrc && (
+              <div className="book-card__cover-content">
+                {book.series && <span className="book-card__series">{book.series}</span>}
+                <h2 className="book-card__cover-title">{book.title}</h2>
+                {book.edition && <span className="book-card__edition">{book.edition}</span>}
+              </div>
+            )}
             <div className="book-card__spine" aria-hidden="true" />
             {fromCloud && (
               <span className="book-card__cloud-badge" title="Книга из облака GitHub">

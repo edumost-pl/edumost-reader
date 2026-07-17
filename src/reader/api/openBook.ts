@@ -12,7 +12,13 @@ import {
 import { contentDirForVolume } from "../book/parseBookToml";
 import { firstPagePath } from "../book/discoverPages";
 import { buildIllustrationRegistry } from "../illustration/buildRegistry";
+import { getAvailableLocales, resolvePageInLocale } from "../book/locale";
 import type { BookManifest, BookReadingSession, ReadingPage, VolumeConfig } from "../types";
+
+export interface OpenBookOptions {
+  pagePath?: string;
+  locale?: string;
+}
 
 export type OpenBookErrorCode =
   | "NOT_FOUND"
@@ -74,10 +80,25 @@ function firstPageInBook(manifest: BookManifest, localId: string, locale: string
 }
 
 /** Open book session + optional page (defaults to first page). Restores from sourceUrl if needed. */
-export async function openBook(localId: string, pagePath?: string): Promise<OpenBookResult> {
+export async function openBook(localId: string, options: OpenBookOptions = {}): Promise<OpenBookResult> {
+  const { pagePath, locale: requestedLocale } = options;
   const { stored, restored } = await assertBookAccess(localId);
   const manifest = await loadManifest(localId);
-  const locale = manifest.defaultLocale;
+  const card = await loadLibraryCard(localId);
+
+  const availableLocales = await getAvailableLocales(localId, {
+    ...stored,
+    locales: card.locales ?? stored.locales,
+    defaultLocale: card.defaultLocale ?? stored.defaultLocale,
+  }, manifest);
+
+  const fallbackLocale = card.defaultLocale ?? stored.defaultLocale ?? manifest.defaultLocale;
+  const locale =
+    requestedLocale && availableLocales.includes(requestedLocale)
+      ? requestedLocale
+      : availableLocales.includes(fallbackLocale)
+        ? fallbackLocale
+        : availableLocales[0] ?? manifest.defaultLocale;
 
   if (manifest.volumes.length === 0) {
     throw new OpenBookError("INVALID_BOOK", "В книге нет томов");
@@ -86,9 +107,14 @@ export async function openBook(localId: string, pagePath?: string): Promise<Open
   const toc = await buildBookToc(localId, manifest, locale);
   const registry = await buildIllustrationRegistry(localId);
   const session: BookReadingSession = {
-    stored,
+    stored: {
+      ...stored,
+      locales: card.locales ?? stored.locales,
+      defaultLocale: card.defaultLocale ?? stored.defaultLocale,
+    },
     manifest,
     locale,
+    availableLocales,
     toc,
     illustrations: registry.items,
     missingIllustrations: registry.missingIds,
@@ -101,6 +127,40 @@ export async function openBook(localId: string, pagePath?: string): Promise<Open
 
   const page = await loadReadingPage(localId, session, targetPath);
   return { session, page, restored };
+}
+
+/** Switch active locale while keeping the current page when possible. */
+export async function switchBookLocale(
+  localId: string,
+  session: BookReadingSession,
+  newLocale: string,
+  currentPagePath: string
+): Promise<{ session: BookReadingSession; page: ReadingPage }> {
+  if (newLocale === session.locale) {
+    const page = await loadReadingPage(localId, session, currentPagePath);
+    return { session, page };
+  }
+
+  if (!session.availableLocales.includes(newLocale)) {
+    throw new OpenBookError("INVALID_BOOK", "Выбранный язык недоступен для этой книги");
+  }
+
+  const toc = await buildBookToc(localId, session.manifest, newLocale);
+  const targetPath = await resolvePageInLocale(
+    localId,
+    toc,
+    currentPagePath,
+    session.locale,
+    newLocale
+  );
+
+  if (!targetPath) {
+    throw new OpenBookError("NO_PAGES", "В выбранном языке нет страниц для чтения");
+  }
+
+  const nextSession: BookReadingSession = { ...session, locale: newLocale, toc };
+  const page = await loadReadingPage(localId, nextSession, targetPath);
+  return { session: nextSession, page };
 }
 
 /** @deprecated use openBook */

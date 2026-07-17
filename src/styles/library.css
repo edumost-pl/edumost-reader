@@ -115,6 +115,23 @@
   transform: perspective(600px) rotateY(-4deg) translateY(-2px);
 }
 
+.book-card__cover--image .book-card__cover-content {
+  display: none;
+}
+
+.book-card__cover-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+
+.book-card__cover--image .book-card__spine {
+  z-index: 2;
+}
+
 .book-card__cover-shine {
   position: absolute;
   inset: 0;

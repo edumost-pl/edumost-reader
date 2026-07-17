@@ -53,6 +53,8 @@ export interface BookReadingSession {
   stored: StoredBook;
   manifest: BookManifest;
   locale: string;
+  /** Locales from metadata/library.json that have content folders on disk. */
+  availableLocales: string[];
   toc: TocVolume[];
   /** Ordered list of :::illustration blocks across the book */
   illustrations: import("./illustration/types").IllustrationRef[];

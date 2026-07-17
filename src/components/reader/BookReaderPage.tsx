@@ -4,12 +4,14 @@ import {
   OpenBookError,
   loadReadingPage,
   openBook,
+  switchBookLocale,
   type BookReadingSession,
   type ReadingPage,
 } from "../../reader";
 import { MarkdownView } from "./MarkdownView";
 import { TableOfContents } from "./TableOfContents";
 import { IllustrationGallery } from "./IllustrationGallery";
+import { LocalePicker } from "./LocalePicker";
 
 export function BookReaderPage() {
   const { localId } = useParams<{ localId: string }>();
@@ -80,6 +82,29 @@ export function BookReaderPage() {
     setGalleryIndex(index);
     setGalleryOpen(true);
   }, []);
+
+  const handleLocaleChange = useCallback(
+    async (newLocale: string) => {
+      if (!localId || !session || !currentPage || newLocale === session.locale) return;
+
+      setPageLoading(true);
+      setError(null);
+      try {
+        const result = await switchBookLocale(localId, session, newLocale, currentPage.page.path);
+        setSession(result.session);
+        setCurrentPage(result.page);
+        setExpandedVolumes(
+          Object.fromEntries(result.session.toc.map((v) => [v.id, v.pages.length > 0]))
+        );
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } catch (e) {
+        setError(e instanceof OpenBookError ? e.message : "Не удалось сменить язык");
+      } finally {
+        setPageLoading(false);
+      }
+    },
+    [localId, session, currentPage]
+  );
 
   useEffect(() => {
     if (!currentPage || !session) return;
@@ -153,6 +178,12 @@ export function BookReaderPage() {
           <Link to="/" className="reader-toolbar__library">
             Моя библиотека
           </Link>
+          <LocalePicker
+            locales={session.availableLocales}
+            current={session.locale}
+            disabled={pageLoading}
+            onChange={(loc) => void handleLocaleChange(loc)}
+          />
           {session.illustrations.length > 0 && (
             <button
               type="button"

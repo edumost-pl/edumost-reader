@@ -14,6 +14,8 @@ export { renderMarkdown, revokeBlobUrls, stripInteractiveMarkdown } from "./mark
 export { buildIllustrationRegistry } from "./illustration/buildRegistry";
 export { findIllustrationBlocks, splitMarkdownWithIllustrations } from "./illustration/parseBlocks";
 export { resolveIllustrationAsset } from "./illustration/resolveAsset";
+export { resolveCoverAsset } from "./cover/resolveCover";
+export { getAvailableLocales, mapPagePathToLocale } from "./book/locale";
 export type {
   IllustrationParams,
   IllustrationRef,
@@ -24,8 +26,10 @@ export {
   openBook,
   openBookFirstPage,
   loadReadingPage,
+  switchBookLocale,
   metadataFromStoredBook,
   OpenBookError,
   type OpenBookResult,
+  type OpenBookOptions,
   type OpenBookErrorCode,
 } from "./api/openBook";
